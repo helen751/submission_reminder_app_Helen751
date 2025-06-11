@@ -1,19 +1,5 @@
 #!/bin/bash
 
-#welcome message
-echo -e "\n\t WELCOME TO HELEN'S SUBMISSION REMINDER APP\n"
-sleep 1
-
-# Prompt user for their name
-read -p "Please enter your name: " name
-
-# Check if the user entered an empty name
-if [ -z "$name" ]; then
-    echo "Name cannot be empty. Exiting."
-    exit 1
-    option_menu
-fi
-
 #creating an option menu function for better user experience when they enter an invalid name
 function option_menu {
 #asking the user if they want to restart the program or exit after entering an invalid name
@@ -27,6 +13,22 @@ function option_menu {
     fi
 }
 
+
+#welcome message
+echo -e "\n\t WELCOME TO HELEN'S SUBMISSION REMINDER APP\n"
+sleep 1
+
+# Prompt user for their name
+read -p "Please enter your name: " name
+
+# Check if the user entered an empty name
+if [ -z "$name" ]; then
+    echo "Name cannot be empty. Exiting."
+    
+    #calling the option menu function to ask the user if they want to restart the program or exit
+    option_menu
+fi
+
 # Creating a directory for the user in the submission reminder app
 echo -e "\n\tCreating a virtual environment for you..."
 
@@ -34,6 +36,26 @@ echo -e "\n\tCreating a virtual environment for you..."
 root_dir="submission_reminder_${name}"
 if [ -d "$root_dir" ]; then
     echo "Directory '$root_dir' already exists. Skipping creation."
+
+    #asking the user if they want to delete the existing directory and create a new one or continue to run the startup script
+    read -p "Do you want to delete the existing directory and create a new one? (yes/no): " delete_choice
+    if [[ "$delete_choice" == "yes" || "$delete_choice" == "y" ]]; then
+        rm -rf "$root_dir"
+        echo "Deleted the existing directory '$root_dir'."
+        mkdir "$root_dir"
+
+        #checking if the directory was created successfully
+        if [ $? -ne 0 ]; then
+            echo "Failed to create the directory. Exiting."
+            exit 1
+        fi
+    else
+        # If the user chooses not to delete, continue with the existing directory and run the startup script since everything is already set up
+        echo "Continuing with the existing directory '$root_dir'. go ahead and run the startup script."
+        echo -e "\n\tYou can run the startup script later by executing:"
+        echo -e "\t\$ bash $root_dir/startup.sh\n"
+        exit 1
+    fi
 else
     mkdir "$root_dir"
     if [ $? -ne 0 ]; then
@@ -55,7 +77,7 @@ sleep 1
 echo -e "\n\tApp structure set up successfully!\n"
 
 # Creating the configuration file
-echo -e "\n\tCreating configuration file\n"
+echo -e "\n\tCreating configuration file"
 cat > "$root_dir/config/config.env" <<EOL
 # This is the config file
 ASSIGNMENT="Shell Navigation"
@@ -67,13 +89,13 @@ echo -e "\n\tConfiguration file created successfully!\n"
 
 #creating the funcions file
 echo -e "\n\tCreating the functions file..."
-cat > "$root_dir/modules/functions.sh" <<EOL
+cat > "$root_dir/modules/functions.sh" <<'EOL'
 #!/bin/bash
 
 # Function to read submissions file and output students who have not submitted
 function check_submissions {
     local submissions_file=$1
-    echo "Checking submissions in $submissions_file"
+    echo "Checking submissions ..."
 
     # Skip the header and iterate through the lines
     while IFS=, read -r student assignment status; do
@@ -113,25 +135,25 @@ echo -e "\n\tSample submissions file created successfully!\n"
 
 # Creating the reminder script and populating it with the given code
 echo -e "\n\tCreating the reminder script..."
-cat > "$root_dir/app/reminder.sh" <<'EOL'
+cat > "$root_dir/app/reminder.sh" <<EOL
 #!/bin/bash
 
 # Source environment variables and helper functions
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR=\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)
+ROOT_DIR=\$(dirname "\$SCRIPT_DIR")
 
-source "$ROOT_DIR/config/config.env"
-source "$ROOT_DIR/modules/functions.sh"
+source "\$ROOT_DIR/config/config.env"
+source "\$ROOT_DIR/modules/functions.sh"
 
 # Path to the submissions file
-submissions_file="$ROOT_DIR/assets/submissions.txt"
+submissions_file="\$ROOT_DIR/assets/submissions.txt"
 
 # Print remaining time and run the reminder function
-echo -e "\n\n\tAssignment: $ASSIGNMENT"
-echo -e"\tDays remaining to submit: $DAYS_REMAINING days"
+echo -e "\\n\\n\tAssignment: \$ASSIGNMENT"
+echo -e "\tDays remaining to submit: \$DAYS_REMAINING days"
 echo "------------------------------------------------"
 
-check_submissions $submissions_file
+check_submissions "\$submissions_file"
 EOL
 
 sleep 1
@@ -147,12 +169,15 @@ echo -e "\n\tAll Files and directories created successfully!\n"
 echo -e "\n\tSetting up the startup script..."
 
 #creating the startup script that will run the reminder script
-cat > "$root_dir/startup.sh" <<EOL
+cat > "$root_dir/startup.sh" <<'EOL'
 #!/bin/bash
 
 # Startup script for Submission Reminder App
-# Navigate to the app directory
-cd "$root_dir/app" || exit
+# Get the directory this script is in
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Navigate to the app directory relative to the script
+cd "$SCRIPT_DIR/app" || exit
 
 # Run the reminder script
 ./reminder.sh
