@@ -96,6 +96,7 @@ cat > "$root_dir/modules/functions.sh" <<'EOL'
 function check_submissions {
     local submissions_file=$1
     echo "Checking submissions ..."
+    sleep 1
 
     # Skip the header and iterate through the lines
     while IFS=, read -r student assignment status; do
@@ -106,7 +107,11 @@ function check_submissions {
 
         # Check if assignment matches and status is 'not submitted'
         if [[ "$assignment" == "$ASSIGNMENT" && "$status" == "not submitted" ]]; then
-            echo "Reminder: $student has not submitted the $ASSIGNMENT assignment!"
+
+            # Print a reminder message in red color
+            # Using ANSI escape codes to print in red
+            printf "\e[31mReminder: $student has not submitted the $ASSIGNMENT assignment!\e[0m \n"
+
         fi
     done < <(tail -n +2 "$submissions_file") # Skip the header
 }
