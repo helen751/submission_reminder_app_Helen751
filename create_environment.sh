@@ -1,66 +1,94 @@
 #!/bin/bash
 
-#creating an option menu function for better user experience when they enter an invalid name
-function option_menu {
-#asking the user if they want to restart the program or exit after entering an invalid name
-    read -p "Do you want to restart the program? (yes/no): " choice
-    if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
-        echo -e "\n\tRestarting the program...\n"
-        exec "$0"  # Restart the script
-    else
-        echo -e "\n\tExiting Helen's Submission Reminder App. Goodbye, $name!\n"
-        exit 0
-    fi
+#root directory for the script
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Check if the script is being sourced or executed for exiting logic
+is_sourced() {
+  [[ "${BASH_SOURCE[0]}" != "${0}" ]]
 }
 
+# function to call the options menu once to avoid duplicate calling 
+SHOW_MENU=true
+if [[ "$1" == "--no-menu" ]]; then
+    SHOW_MENU=false
+fi
 
 #welcome message
 echo -e "\n\t WELCOME TO HELEN'S SUBMISSION REMINDER APP\n"
 sleep 1
 
-# Prompt user for their name
-read -p "Please enter your name: " name
+# Prompting the user for their name and validating input until a valid name is entered
+while true; do
+    read -p "Please enter your name: " name
 
-# Check if the user entered an empty name
+    if [ -z "$name" ]; then
+        printf "\e[31mName cannot be empty.\e[0m\n"
+        read -p "Do you want to restart the program? (yes/no): " choice_t
+        if [[ "$choice_t" =~ ^(yes|y)$ ]]; then
+            continue  # Re-prompt for name
+        else
+            printf "\n\e[33m\tExiting Helen's Submission Reminder App. Goodbye!\n\e[0m\n"
+            if is_sourced; then
+                return 1
+            else
+                exit 1
+            fi
+        fi
+    else
+        break  # Valid name entered, proceed
+    fi
+done
+
+# Defensive check to ensure the name variable is not empty
 if [ -z "$name" ]; then
-    echo "Name cannot be empty. Exiting."
-    
-    #calling the option menu function to ask the user if they want to restart the program or exit
-    option_menu
+    if is_sourced; then
+        return 1
+    else
+        exit 1
+    fi
 fi
 
-# Creating a directory for the user in the submission reminder app
+#exporting the name variable so that it can be used in other scripts
+export name
+
+# Starting automation
 echo -e "\n\tCreating a virtual environment for you..."
 
+#setting the root directory for the app environment
+root_dir="$script_dir/submission_reminder_${name}"
+
 # Checking if the virtual environment directory already exists
-root_dir="submission_reminder_${name}"
 if [ -d "$root_dir" ]; then
-    echo "Directory '$root_dir' already exists. Skipping creation."
+    printf "\e[33mDirectory '$root_dir' already exists. Skipping creation.\e[0m \n"
 
     #asking the user if they want to delete the existing directory and create a new one or continue to run the startup script
     read -p "Do you want to delete the existing directory and create a new one? (yes/no): " delete_choice
     if [[ "$delete_choice" == "yes" || "$delete_choice" == "y" ]]; then
         rm -rf "$root_dir"
-        echo "Deleted the existing directory '$root_dir'."
+
+        #message in yellow color to indicate that the existing directory has been deleted
+        printf "\e[33mDeleted the existing directory '$root_dir'.\e[0m \n"
         mkdir "$root_dir"
 
         #checking if the directory was created successfully
         if [ $? -ne 0 ]; then
-            echo "Failed to create the directory. Exiting."
-            exit 1
+            printf "\e[31mFailed to create the directory. Run the script again.\n\e[0m \n"
+            
         fi
     else
         # If the user chooses not to delete, continue with the existing directory and run the startup script since everything is already set up
         echo "Continuing with the existing directory '$root_dir'. go ahead and run the startup script."
-        echo -e "\n\tYou can run the startup script later by executing:"
-        echo -e "\t\$ bash $root_dir/startup.sh\n"
-        exit 1
+        
+        #calling the option menu after setup to ask the user what they want to do next
+        source "$root_dir/modules/functions.sh"
+        option_menu_after_setup
     fi
 else
     mkdir "$root_dir"
     if [ $? -ne 0 ]; then
-        echo "Failed to create the directory. Exiting."
-        exit 1
+        printf "\e[31mFailed to create the directory. Exiting.\n\e[0m \n"
+        exit 0
     fi
 fi
 sleep 1
@@ -87,14 +115,17 @@ EOL
 sleep 1
 echo -e "\n\tConfiguration file created successfully!\n"
 
-#creating the funcions file
+#creating the functions file
 echo -e "\n\tCreating the functions file..."
 cat > "$root_dir/modules/functions.sh" <<'EOL'
 #!/bin/bash
 
+#for a better user experience, I added one more functions to this original functions file
 # Function to read submissions file and output students who have not submitted
 function check_submissions {
     local submissions_file=$1
+    #setting a variable to count if there are unsubmitted assignments
+    found_unsubmitted=0
     echo "Checking submissions ..."
     sleep 1
 
@@ -107,15 +138,64 @@ function check_submissions {
 
         # Check if assignment matches and status is 'not submitted'
         if [[ "$assignment" == "$ASSIGNMENT" && "$status" == "not submitted" ]]; then
-
             # Print a reminder message in red color
-            # Using ANSI escape codes to print in red
             printf "\e[31mReminder: $student has not submitted the $ASSIGNMENT assignment!\e[0m \n"
-
+            found_unsubmitted=1
         fi
     done < <(tail -n +2 "$submissions_file") # Skip the header
+    # If no unsubmitted assignments were found, print a success message
+    if [[ "$found_unsubmitted" -eq 0 ]]; then
+    printf "\e[32mNo students found who have not submitted this assignment.\e[0m\n\n"
+    fi
 }
+
+#option menu function to ask the user if they want to:
+#run the startup script now, 
+#restart the creat envrionment script, 
+#run the copilot script or 
+#exit the app after the environment has been created for better user experience
+function option_menu_after_setup {
+    echo -e "\n\tWhat would you like to do next?"
+    echo -e "\t1. Run the startup script now"
+    echo -e "\t2. Restart the create environment script"
+    echo -e "\t3. Run the copilot script"
+    echo -e "\t4. Exit the app"
+
+    read -p "Please enter your choice (1-4): " choice
+
+    case $choice in
+        1)
+            clear
+            printf "\n\e[32m\tRunning the startup script...\n\e[0m\n"
+            exec bash "$root_dir/startup.sh"
+            sleep 1
+            ;;
+        2)
+            clear
+            printf "\n\e[32m\tRestarting the create environment script...\n\e[0m\n"
+            sleep 1
+            exec bash $root_dir/../create_environment.sh --no-menu
+            ;;
+        3)
+            clear
+            printf "\n\e[32m\tRunning the copilot script...\n\e[0m\n"
+            sleep 1
+            exec bash $root_dir/../copilot_shell_script.sh
+            ;;
+        4)
+            
+            printf "\n\e[33m\tExiting Helen's Submission Reminder App. Goodbye, $name!\n\e[0m\n"
+            exit 0
+            ;;
+        *)
+            printf "\n\e[31mInvalid choice. Exiting.\n\e[0m\n"
+            exit 1
+            ;;
+    esac
+}
+
 EOL
+
 sleep 1
 echo -e "\n\tFunctions file created successfully!\n"
 
@@ -143,6 +223,11 @@ echo -e "\n\tCreating the reminder script..."
 cat > "$root_dir/app/reminder.sh" <<EOL
 #!/bin/bash
 
+# Set the root directory dynamically to the project root
+root_dir="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")/../" && pwd)"
+# Export so it's available in functions
+export root_dir
+
 # Source environment variables and helper functions
 SCRIPT_DIR=\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=\$(dirname "\$SCRIPT_DIR")
@@ -159,6 +244,9 @@ echo -e "\tDays remaining to submit: \$DAYS_REMAINING days"
 echo "------------------------------------------------"
 
 check_submissions "\$submissions_file"
+
+#calling the option menu after setup to ask the user what they want to do next
+option_menu_after_setup
 EOL
 
 sleep 1
@@ -166,11 +254,12 @@ echo -e "\n\tReminder script created successfully!"
 
 # adding permissions for the created files and directories
 chmod +x "$root_dir/app/reminder.sh"
-chmod +x "$root_dir/config/config.env"
 chmod +x "$root_dir/modules/functions.sh"
-chmod +x "$root_dir/assets/submissions.txt"
+chmod 644 "$root_dir/config/config.env"
+chmod 644 "$root_dir/assets/submissions.txt"
 
-echo -e "\n\tAll Files and directories created successfully!\n"
+printf "\n\t\e[32mAll Files and directories created successfully!\e[0m\n\n"
+
 echo -e "\n\tSetting up the startup script..."
 
 #creating the startup script that will run the reminder script
@@ -193,23 +282,14 @@ chmod +x "$root_dir/startup.sh"
 
 #adding a little delay before the final message
 sleep 1
-echo -e "\n\tStartup script set up successfully!\n"
+printf "\n\t\e[32mStartup script set up successfully!\e[0m\n\n"
 
-
-#asking the user to type y if they want to run the startup script now
-read -p "Do you want to run the startup script now? (y/n): " run_now
-
-if [[ "$run_now" == "Y" || "$run_now" == "y" ]]; then
-    echo -e "\n\tRunning the startup script...\n"
-    bash "$root_dir/startup.sh"
-else
-    echo -e "\n\tYou can run the startup script later by executing:"
-    echo -e "\t\$ bash $root_dir/startup.sh\n"
-
-    #adding a thank you message
-    echo -e "\n\tThank you for using Helen's Submission Reminder App!"
-    echo -e "\n\tHave a great day, $name!\n"
+#source the functions file to use the option menu after setup
+source "$root_dir/modules/functions.sh"
+if [ "$SHOW_MENU" = true ]; then
+    option_menu_after_setup
 fi
+# End of script
 
 
 
