@@ -47,14 +47,14 @@ function option_menu_after_setup {
         1)
             clear
             printf "\n\e[32m\tRunning the startup script...\n\e[0m\n"
-            exec bash "$root_dir/startup.sh"
             sleep 1
+            exec bash "$root_dir/startup.sh"
             ;;
         2)
             clear
             printf "\n\e[32m\tRestarting the create environment script...\n\e[0m\n"
             sleep 1
-            exec bash $root_dir/../create_environment.sh --no-menu
+            bash $root_dir/../create_environment.sh
             ;;
         3)
             clear

@@ -84,9 +84,18 @@ submission_reminder_app_GithubUsername/
 
    <ins>Example output when running create_environment.sh</ins>:
 
-<pre><code class="bash"> $ ./create_environment.sh Welcome to the Submission Reminder App Setup! Please enter your name: helen Creating a virtual environment for you... Directory created: submission_reminder_helen Copying required files and folders... All scripts made executable. Starting the application... </code></pre>
+<pre><code class="bash"> $ bash create_environment.sh Welcome to Helen's Submission Reminder App! 
 
-2. **Based on User Input - Launches** `startup.sh`
+Please enter your name: name here... 
+
+Creating a virtual environment for you... 
+Directory created: submission_reminder_helen 
+
+All files and directories successufully setup. 
+
+Choose what you want to do next </code></pre>
+
+2. **Based on User selection - Launches** `startup.sh`
 
    - Loads `config.env` to get the current assignment name.
    - Calls `reminder.sh` to check for students who haven’t submitted.
