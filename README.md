@@ -177,7 +177,7 @@ chmod +x create_environment.sh
 3. **Run the environment setup**:
 
 ```bash
-./create_environment.sh
+bash create_environment.sh
 ```
 
 4. **To run the reminder app**:
@@ -192,7 +192,7 @@ bash submisison_reminder_{yourname}/startup.sh
 bash copilot_shell_script.sh
 ```
 
-**NOTE: The app include a user option menu for better navigation, so you don't need to run all script manually.**
+**NOTE: The app include a user option menu for better navigation, so you don't need to run all scripts manually. Option menu is shown after each operation, so you just have to go with the flow.**
 
 ---
 
@@ -204,8 +204,11 @@ bash copilot_shell_script.sh
 - Absolute paths are used to prevent directory confusion
 - `exec` ensures clean re-entry into scripts without duplicate nesting
 - `sleep 1` adds a 1 seconds delay to the program for better flow.
-- `Aside the helper function given inside `functions.sh`, I added one more function for the user menu option navigation
+- `clear` I used this to clear the console when an operation is chosen to avoid overcrowding the terminal interface.
+- `Aside the helper function given inside functions.sh`, I added one more function for the user menu option navigation
 - Used color codes eg `e[32m - green color` to render messages in interactive colors
+- I added a defensive check in the `create_environment` script, so even though the loop fails at any point, it still exits the application, when a valid name is not entered.
+- All code scripts are well commented for better understanding of each function.
 
 ---
 
