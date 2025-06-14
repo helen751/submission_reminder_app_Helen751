@@ -8,6 +8,9 @@ is_sourced() {
     [[ "${BASH_SOURCE[0]}" != "${0}" ]]
 }
 
+#clear the terminal screen for better visibility
+clear
+
 #welcome message
 echo -e "\n\t WELCOME TO HELEN'S SUBMISSION REMINDER APP\n"
 sleep 1
@@ -139,13 +142,13 @@ function option_menu_after_setup {
             clear
             printf "\n\e[32m\tRestarting the create environment script...\n\e[0m\n"
             sleep 1
-            bash "$script_dir/create_environment.sh"
+            bash "$root_dir/../create_environment.sh"
             ;;
         3)
             clear
             printf "\n\e[32m\tRunning the copilot script...\n\e[0m\n"
             sleep 1
-            exec bash "$script_dir/copilot_shell_script.sh"
+            exec bash "$root_dir/../copilot_shell_script.sh"
             ;;
         4)
             printf "\n\e[33m\tExiting Helen's Submission Reminder App. Goodbye, $name!\n\e[0m\n"

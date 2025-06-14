@@ -119,6 +119,7 @@ Choose what you want to do next </code></pre>
 ## ⚠️ Error Handling
 
 - If the directory already exists, user is notified.
+- User will be asked, if they want to delete and recreate the existing directory with same name or proceed.
 - If `submissions.txt` or `config.env` is missing, a clear error is shown.
 - Invalid menu choices return feedback.
 - Script paths are resolved using absolute paths to avoid execution issues.
