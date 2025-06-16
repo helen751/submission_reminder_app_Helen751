@@ -179,6 +179,7 @@ Wisdom, Shell variables, not submitted
 Favour, Git branches, not submitted
 Ugoeze, Rust basics, submitted
 Peace, HTML tags, submitted
+Chidera, Git, not submitted
 EOL
 
         sleep 1
