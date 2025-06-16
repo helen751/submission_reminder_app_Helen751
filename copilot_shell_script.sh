@@ -21,7 +21,7 @@ if [ ${#project_dirs[@]} -eq 1 ]; then
     PROJECT_DIR="${project_dirs[0]}"
 else
     # If multiple project directories are found, prompt the user to select one
-    echo -e "\n Multiple project directories found:"
+    printf "\e[33m \n Multiple project directories found:\e[0m \n"
     for i in "${!project_dirs[@]}"; do
         dir_name=$(basename "${project_dirs[$i]}")
         echo "  [$i] $dir_name"
