@@ -36,8 +36,8 @@ else
         if [[ "$choice_t" =~ ^(yes|y)$ ]]; then
             exec "$0"  # Restart the script
         else
-            echo -e "\n\tExiting Helen's Submission Reminder App. Goodbye $name!\n"
-            exit 1
+            printf "\n\e[33m\tExiting Helen's Submission Reminder App. Goodbye $name!\n\e[0m\n"
+            exit 1 # Exit the application
         fi
     fi
 
@@ -75,7 +75,7 @@ read -p "Enter the assignment name: " assignment_name
         if [[ "$choice_t" =~ ^(yes|y)$ ]]; then
             continue  # Re-prompt for assignment name
         else
-            echo -e "\n\tExiting Helen's Submission Reminder App. Goodbye $name!\n"
+            printf "\n\e[33m\tExiting Helen's Submission Reminder App. Goodbye $name!\n\e[0m\n"
             exit 1
         fi
     else
@@ -87,8 +87,12 @@ done
 
 # Detect OS type for sed command to allow smooth running on both macOS and Linux
 if [[ "$(uname)" == "Darwin" ]]; then
+    # For macOS, use sed to update the assignment name in the config file
+    # The '' after -i is necessary for compatibility with macOS sed
     sed -i '' "2s/.*/ASSIGNMENT=\"$assignment_name\"/" "config/config.env"
 else
+    # For Linux, use sed to update the assignment name in the config file
+    # No '' after -i is needed for Linux sed
     sed -i "2s/.*/ASSIGNMENT=\"$assignment_name\"/" "config/config.env"
 fi
 

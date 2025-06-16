@@ -224,6 +224,10 @@ EOL
         chmod 644 "$root_dir/config/config.env"
         chmod 644 "$root_dir/assets/submissions.txt"
 
+        #adding permisiions to the copilot script
+        chmod +x "$script_dir/copilot_shell_script.sh"
+
+
         printf "\n\t\e[32mAll Files and directories created successfully!\e[0m\n\n"
 
         #creating the startup script to run the reminder script
